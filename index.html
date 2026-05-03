@@ -84,14 +84,18 @@
 
         /* HERO */
         .hero {
-            min-height: 100vh;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            min-height: 85vh;
+            display: flex;
+            justify-content: center;
             align-items: center;
             padding: 8rem 3rem 4rem;
-            gap: 4rem;
             max-width: 1100px;
             margin: 0 auto;
+        }
+
+        .hero-text {
+            text-align: center;
+            width: 100%;
         }
 
         .hero-text h1 {
@@ -213,6 +217,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
+            align-items: start;
         }
 
         .project-card {
@@ -222,10 +227,10 @@
             padding: 1.75rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .project-card::before {
@@ -249,6 +254,67 @@
             opacity: 1;
         }
 
+        .project-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .project-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .expand-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--muted);
+            transition: transform 0.3s ease;
+            user-select: none;
+        }
+
+        .project-card.expanded .expand-icon,
+        .hackathon-card.expanded .expand-icon {
+            transform: rotate(45deg);
+        }
+
+        .project-details {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease, margin-top 0.3s ease;
+        }
+
+        .project-details-inner {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .project-card.expanded .project-details,
+        .hackathon-card.expanded .project-details {
+            grid-template-rows: 1fr;
+            margin-top: 1.25rem;
+        }
+
+        .project-card.expanded .project-details-inner,
+        .hackathon-card.expanded .project-details-inner {
+            opacity: 1;
+            transition: opacity 0.3s ease 0.15s;
+        }
+
+        .project-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
         .project-type {
             font-family: 'DM Mono', monospace;
             font-size: 0.7rem;
@@ -268,7 +334,6 @@
             font-size: 0.9rem;
             color: var(--muted);
             line-height: 1.6;
-            flex: 1;
         }
 
         .project-tags {
@@ -306,6 +371,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
+            align-items: start;
         }
 
         .hackathon-card {
@@ -315,7 +381,35 @@
             padding: 1.75rem;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .hackathon-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .hackathon-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .hackathon-card:hover::before {
+            opacity: 1;
+        }
+
+        .hackathon-card .expand-icon {
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .hackathon-badge {
@@ -544,6 +638,18 @@
             }
         }
     </style>
+    <script>
+        // Prevent browser from restoring scroll position or jumping to hash on reload
+        if (history.scrollRestoration) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+        // Remove hash from URL without triggering a reload
+        if (window.location.hash) {
+            window.history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+    </script>
 </head>
 
 <body>
@@ -560,16 +666,28 @@
     <!-- HERO -->
     <div class="hero">
         <div class="hero-text">
-            <h1>Hello! I'm <em>Natalia</em></h1>
-            <h3>Computer Science Student</h3><br>
-            <p>Computer Science student at UBC focused on data engineering and backend systems. Interested in building
-                reliable data pipelines and scalable applications that turn complex data into useful insights.</p>
-            <div class="hero-links">
-                <a href="#projects" class="btn btn-primary">View my work</a>
-                <a href="https://github.com/nb488" target="_blank" class="btn btn-outline">GitHub ↗</a>
-                <a href="https://linkedin.com/in/natblanco" target="_blank" class="btn btn-outline">LinkedIn ↗</a>
+            <h1 style="text-align: left;">Hello! I'm</h1>
+
+
+            <div style="padding: 1rem 0; position: relative;">
+                <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">
+                    Interactive word cloud navigation</h2>
+                <div id="canvas" style="position:relative;width:800px;height:420px;margin:0 auto; max-width: 100%;">
+                </div>
+                <div id="tooltip"
+                    style="position:fixed;pointer-events:none;opacity:0;transition:opacity 0.15s;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.5;max-width:220px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.07);text-align:left;">
+                </div>
             </div>
+
+
         </div>
+    </div>
+
+    <hr class="divider" />
+
+    <section id="tech-stack">
+        <p class="section-label">Tech Stack</p>
+        <h2 class="section-title">Tools I use</h2>
         <div class="hero-visual">
             <div class="skill-pill-row">
                 <span class="skill-pill hi">Python</span>
@@ -588,88 +706,146 @@
                 <span class="skill-pill">Git</span>
             </div>
         </div>
-    </div>
-
-    <hr class="divider" />
+    </section>
 
     <!-- PROJECTS -->
-    <section id="projects">
+    <section id="projects" style="padding-top: 0;">
         <p class="section-label">Projects</p>
         <h2 class="section-title">Things I've built</h2>
 
         <div class="projects-grid">
 
-            <div class="project-card">
-                <span class="project-type">Data Analysis · Research · Team</span>
-                <h3>Large-Scale Dataset Analysis (Published)</h3>
-                <p>Analyzed a large-scale dataset to identify patterns across groups using statistical methods, data
-                    wrangling, and diversity metrics. Contributed to a published research output.</p>
-                <div class="project-tags">
-                    <span class="tag">R</span>
-                    <span class="tag">RStudio</span>
-                    <span class="tag">ggplot2</span>
-                    <span class="tag">Bash</span>
+            <div class="project-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="project-type">Data Analysis · Research · Team</span>
+                    <div class="project-title-row">
+                        <h3>Large-Scale Dataset Analysis (Published)</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">R</span>
+                        <span class="tag">RStudio</span>
+                        <span class="tag">ggplot2</span>
+                        <span class="tag">Bash</span>
+                    </div>
                 </div>
-                <a href="https://github.com/nb488/MSDatasetAnalysisMICB475" target="_blank" class="project-link">View on GitHub
-                    ↗</a>
-            </div>
-
-            <div class="project-card">
-                <span class="project-type">Full Stack · Academic · Team</span>
-                <h3>Smart Garden Management Database</h3>
-                <p>Full-stack RDBMS app with 14 relations and 35+ attributes. Designed normalized schemas using ER
-                    models, built a Node.js/Express backend with 10 parameterized SQL queries via Oracle Client.</p>
-                <div class="project-tags">
-                    <span class="tag">JavaScript</span>
-                    <span class="tag">Node.js</span>
-                    <span class="tag">Express</span>
-                    <span class="tag">Oracle</span>
-                    <span class="tag">SQL</span>
-                </div>
-                <a href="https://github.com/nb488/SmartGardenManagementDatabase" target="_blank"
-                    class="project-link">View on GitHub ↗</a>
-            </div>
-
-            <div class="project-card">
-                <span class="project-type">Full Stack · Academic · Team</span>
-                <h3>Insight UBC Scheduling System</h3>
-                <p>RESTful full-stack scheduling system integrating courses, sections, rooms, and buildings. Supports
-                    bulk uploads and complex queries over historical academic data.</p>
-                <div class="project-tags">
-                    <span class="tag">TypeScript</span>
-                    <span class="tag">RESTful APIs</span>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/datasetanalysis.png" alt="Data Analysis Project" class="project-image">
+                        <p>Analyzed a large-scale dataset to identify patterns across groups using statistical
+                            methods,
+                            data
+                            wrangling, and diversity metrics. </p>
+                        <a href="https://github.com/limdima/MICB475_Team3" target="_blank" class="project-link">View
+                            on
+                            GitHub
+                            ↗</a>
+                    </div>
                 </div>
             </div>
 
-            <div class="project-card">
-                <span class="project-type">Full Stack · Personal</span>
-                <h3>Language Learning AI Assistant</h3>
-                <p>full-stack language learning web application that helps users practice real-world conversations by
-                    interacting with an AI assistant in scenario-based roleplay.
-                <div class="project-tags">
-                    <span class="tag">Javascript</span>
-                    <span class="tag">OpenRouter API</span>
-                    <span class="tag">React Router</span>
-                    <span class="tag">Vite</span>
+            <div class="project-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="project-type">Full Stack · Academic · Team</span>
+                    <div class="project-title-row">
+                        <h3>Smart Garden Management Database</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">Node.js</span>
+                        <span class="tag">Express</span>
+                        <span class="tag">Oracle</span>
+                        <span class="tag">SQL</span>
+                    </div>
                 </div>
-                <a href="https://github.com/nb488/LanguageScenarioPractice" target="_blank" class="project-link">View on
-                    GitHub ↗</a>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/garden.png" alt="Smart Garden DB Project" class="project-image">
+                        <p>Full-stack RDBMS app with 14 relations and 35+ attributes. Designed normalized schemas
+                            using ER models, built a Node.js/Express backend with 10 parameterized SQL queries via
+                            Oracle
+                            Client.
+                        </p>
+                        <a href="https://github.com/nb488/SmartGardenManagementDatabase" target="_blank"
+                            class="project-link">View on GitHub ↗</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="project-card">
-                <span class="project-type">Machine Learning · Personal</span>
-                <h3>Breast Cancer Diagnosis Model</h3>
-                <p>Supervised classification pipeline to predict cancer diagnosis from diagnostic features. Benchmarked
-                    models to optimize recall score and used SHAP to surface the most predictive variables.</p>
-                <div class="project-tags">
-                    <span class="tag">Python</span>
-                    <span class="tag">scikit-learn</span>
-                    <span class="tag">pandas</span>
-                    <span class="tag">SHAP</span>
-                    <span class="tag">Jupyter</span>
+            <div class="project-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="project-type">Full Stack · Academic · Team</span>
+                    <div class="project-title-row">
+                        <h3>Insight UBC Scheduling System</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">TypeScript</span>
+                        <span class="tag">RESTful APIs</span>
+                    </div>
                 </div>
-                <a href="https://github.com/nb488/Breast-Cancer-Diagnosis-Project" target="_blank"
-                    class="project-link">View on GitHub ↗</a>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/insight.png" alt="Insight UBC Project" class="project-image">
+                        <p>RESTful full-stack scheduling system integrating courses, sections, rooms, and buildings.
+                            Supports bulk uploads and complex queries over historical academic data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="project-type">Full Stack · Personal</span>
+                    <div class="project-title-row">
+                        <h3>Language Learning AI Assistant</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Javascript</span>
+                        <span class="tag">OpenRouter API</span>
+                        <span class="tag">React Router</span>
+                        <span class="tag">Vite</span>
+                    </div>
+                </div>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/plottwist.png" alt="Language Learning Project" class="project-image">
+                        <p>Full-stack language learning web application that helps users practice real-world
+                            conversations by interacting with an AI assistant in scenario-based roleplay.</p>
+                        <a href="https://github.com/nb488/LanguageScenarioPractice" target="_blank"
+                            class="project-link">View on
+                            GitHub ↗</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="project-type">Machine Learning · Personal</span>
+                    <div class="project-title-row">
+                        <h3>Breast Cancer Diagnosis Model</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">scikit-learn</span>
+                        <span class="tag">pandas</span>
+                        <span class="tag">SHAP</span>
+                        <span class="tag">Jupyter</span>
+                    </div>
+                </div>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/mlanalysis.png" alt="Breast Cancer Diagnosis Model" class="project-image">
+                        <p>Supervised classification pipeline to predict cancer diagnosis from diagnostic features.
+                            Benchmarked models to optimize recall score and used SHAP to surface the most predictive
+                            variables.
+                        </p>
+                        <a href="https://github.com/nb488/Breast-Cancer-Diagnosis-Project" target="_blank"
+                            class="project-link">View on GitHub ↗</a>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -681,32 +857,63 @@
         <h2 class="section-title">Hackathon builds</h2>
         <div class="hackathon-grid">
 
-            <div class="hackathon-card">
-                <span class="hackathon-badge">🏆 3rd Place — cmd-f 2026</span>
-                <h3>"Wing" Disguised Safety App</h3>
-                <p>A dual-interface disguised mobile app with a hidden support system for accessing safety resources
-                    discreetly. Built core product features and AI chat functionality.</p>
-                <div class="project-tags">
-                    <span class="tag">TypeScript</span>
-                    <span class="tag">React Native</span>
-                    <span class="tag">Expo</span>
-                    <span class="tag">OpenRouter API</span>
+            <div class="hackathon-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="hackathon-badge" style="margin-bottom: 0.25rem;">🏆 3rd Place — cmd-f 2026</span>
+                    <div class="project-title-row">
+                        <h3>"Wing" Disguised Safety App</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">TypeScript</span>
+                        <span class="tag">React Native</span>
+                        <span class="tag">Expo</span>
+                        <span class="tag">OpenRouter API</span>
+                    </div>
                 </div>
-                <span class="hackathon-event">March 2026</span>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/wing.png" alt="Wing App Project" class="project-image">
+                        <p>A dual-interface disguised mobile app with a hidden support system for accessing safety
+                            resources
+                            discreetly. Built core product features and AI chat functionality.</p>
+                        <a href="https://github.com/nb488/DisguisedSafetyApplication" target="_blank"
+                            class="project-link">View on GitHub↗</a>
+                        <a href="https://devpost.com/software/wing-cet3o0" target="_blank" class="project-link">View on
+                            Devpost↗</a>
+                        <span class="hackathon-event" style="opacity: 0.6; font-size: 0.85rem;">March 2026</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="hackathon-card">
-                <span class="hackathon-badge">🏆 Diversity in CS Winner — youCode 2026</span>
-                <h3>"GiveSpot" Pop-up Donation App</h3>
-                <p>A donation platform connecting users to nearby volunteer opportunities to support non-profits.
-                    Designed and implemented backend APIs and real-time database schema using Supabase.</p>
-                <div class="project-tags">
-                    <span class="tag">TypeScript</span>
-                    <span class="tag">Supabase</span>
-                    <span class="tag">REST APIs</span>
-                    <span class="tag">SQL</span>
+            <div class="hackathon-card" onclick="toggleProject(this)">
+                <div class="project-header">
+                    <span class="hackathon-badge" style="margin-bottom: 0.25rem;">🏆 Diversity in CS Winner — youCode
+                        2026</span>
+                    <div class="project-title-row">
+                        <h3>"GiveSpot" Pop-up Donation App</h3>
+                        <span class="expand-icon">+</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">TypeScript</span>
+                        <span class="tag">Supabase</span>
+                        <span class="tag">REST APIs</span>
+                        <span class="tag">SQL</span>
+                    </div>
                 </div>
-                <span class="hackathon-event">April 2026</span>
+                <div class="project-details">
+                    <div class="project-details-inner">
+                        <img src="images/givespot.png" alt="GiveSpot App Project" class="project-image">
+                        <p>A donation platform connecting users to nearby volunteer opportunities to support
+                            non-profits.
+                            Designed and implemented backend APIs and real-time database schema using Supabase.</p>
+                        <a href="https://github.com/nb488/GiveSpot" target="_blank" class="project-link">View on
+                            GitHub↗</a>
+                        <a href="https://devpost.com/software/givespot" target="_blank" class="project-link">View on
+                            Devpost↗</a>
+                        <span class="hackathon-event" style="opacity: 0.6; font-size: 0.85rem;">April 2026</span>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -721,27 +928,12 @@
         <div class="about-grid">
             <div class="about-text">
                 <p>I'm a <strong>Computer Science student at UBC</strong> focused on data engineering and backend
-                    systems. I’m interested in how data moves through systems and how to make that process reliable and
-                    easy to work with.</p>
-                <p>I’ve worked on projects involving data pipelines, database-backed applications, and data processing
-                    workflows. I like to focus on keeping things structured, maintainable, and practical rather than
+                    systems. I’ve worked on projects involving data pipelines, database-backed applications, and data
+                    processing workflows. I focus on keeping things structured, maintainable, and practical rather than
                     overcomplicated.</p>
-                <p>I’m currently looking for <strong>data engineering or data-focused internships</strong> where I can
-                    apply my skills in Python, SQL, and data modeling to real-world problems.</p>
-            </div>
-            <div class="about-stats">
-                <div class="stat-row">
-                    <span class="stat-label">Degree</span>
-                    <span class="stat-value">BCS @ UBC</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Background</span>
-                    <span class="stat-value">Research + CS</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Based in</span>
-                    <span class="stat-value">Vancouver, BC</span>
-                </div>
+                <p>I’m currently looking for <strong>data engineering or data-focused internships</strong> where I
+                    can
+                    apply my skills in <strong>Python, SQL, and data modeling</strong> to real-world problems.</p>
             </div>
         </div>
     </section>
@@ -752,8 +944,8 @@
     <section id="contact">
         <div class="contact-inner">
             <div>
-                <h2>Let's work <em>together</em></h2>
-                <p>I'm actively looking for internships for Fall 2026. <br> Feel free to reach out!</p>
+                <h2>Let's work together</h2>
+                <p>I'm actively looking for internships for Fall 2026. <br> Feel free to reach out</p>
             </div>
             <div class="contact-links">
                 <a href="mailto:bnatalia232@gmail.com" class="contact-link">
@@ -782,9 +974,145 @@
     </section>
 
     <footer>
-        <p>Natalia Blanco · Vancouver, BC</p>
+        <p>Natalia Blanco · 2026</p>
     </footer>
 
+    <script>
+        function toggleProject(clickedCard) {
+            // Close all other cards
+            document.querySelectorAll('.project-card, .hackathon-card').forEach(card => {
+                if (card !== clickedCard) {
+                    card.classList.remove('expanded');
+                }
+            });
+            // Toggle the clicked card
+            clickedCard.classList.toggle('expanded');
+        }
+    </script>
 </body>
 
 </html>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.min.js"></script>
+<script>
+    const words = [
+        { text: "Natalia", size: 160, section: "#about", desc: "A little about me", interactive: true },
+        { text: "Projects", size: 55, section: "#projects", desc: "Things I've built", interactive: true },
+        { text: "Research", size: 55, section: "#projects", desc: "Things I've built", interactive: true },
+        { text: "Teammate", size: 44, interactive: false },
+        { text: "Hackathons", size: 55, section: "#hackathons", desc: "Hackathon builds", interactive: true },
+        { text: "Data Engineering", size: 54, interactive: false },
+        { text: "Backend Developer", size: 44, interactive: false },
+        { text: "Language Enthusiast", size: 36, interactive: false },
+        { text: "Tools", size: 55, section: "#tech-stack", desc: "Tools I use", interactive: true },
+        { text: "LinkedIn", size: 55, section: "#contact", desc: "Let's Connect", interactive: true },
+        { text: "Github", size: 55, section: "#contact", desc: "Let's Connect", interactive: true },
+        { text: "Microbiology", size: 20, interactive: false },
+        { text: "Exploratory", size: 24, interactive: false },
+        { text: "Data Wrangling", size: 28, interactive: false },
+        { text: "Database Design", size: 24, interactive: false },
+        { text: "Problem Solver", size: 24, interactive: false },
+        { text: "Cycling", size: 24, interactive: false },
+        { text: "Painting", size: 20, interactive: false },
+        { text: "Hiking", size: 24, interactive: false },
+        { text: "Foodie", size: 20, interactive: false },
+        { text: "Dog/Cat person", size: 20, interactive: false },
+        { text: "Machine Learning", size: 34, interactive: false },
+        { text: "Presentations", size: 28, interactive: false },
+        { text: "Python", size: 28, interactive: false },
+        { text: "SQL", size: 28, interactive: false },
+        { text: "Javascript", size: 28, interactive: false },
+        { text: "Typescript", size: 28, interactive: false },
+        { text: "Git", size: 28, interactive: false },
+        { text: "Collaborator", size: 28, interactive: false },
+        { text: "Computer Networking", size: 28, interactive: false }
+    ];
+
+    const tooltip = document.getElementById('tooltip');
+    const canvas = document.getElementById('canvas');
+    const W = 800, H = 420;
+
+    d3.layout.cloud()
+        .size([W, H])
+        .words(words.map(d => ({ ...d })))
+        .padding(4)
+        .rotate(() => 0)
+        .font("sans-serif")
+        .fontSize(d => d.size)
+        .spiral("archimedean")
+        .on("end", draw)
+        .start();
+
+    function draw(placedWords) {
+        const svg = d3.select(canvas)
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${W} ${H}`);
+
+        const g = svg.append("g")
+            .attr("transform", `translate(${W / 2},${H / 2})`);
+
+        g.selectAll("text")
+            .data(placedWords)
+            .enter()
+            .append("text")
+            .style("font-size", d => d.size + "px")
+            .style("font-family", "sans-serif")
+            .style("font-weight", "500")
+            .style("fill", d => {
+                if (d.text === "Natalia") return "#007BA7";
+                return d.interactive ? "#000000" : "var(--muted)";
+            })
+            .style("cursor", d => d.interactive ? "pointer" : "default")
+            .style("transition", "opacity 0.15s, fill 0.15s")
+            .attr("text-anchor", "middle")
+            .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
+            .text(d => d.text)
+            .on("mouseenter", function (event, d) {
+                if (!d.interactive) return;
+                g.selectAll("text").style("opacity", 0.3);
+                d3.select(this)
+                    .style("opacity", 1)
+                    .style("fill", "var(--accent)");
+
+                tooltip.innerHTML = `<strong style="color:var(--text);display:block;margin-bottom:4px;">${d.text}</strong><span style="color:var(--muted);">${d.desc}</span><span style="display:block;margin-top:6px;color:var(--accent-dark);font-size:12px;">Click to explore ↗</span>`;
+                tooltip.style.opacity = 1;
+                moveTooltip(event);
+            })
+            .on("mousemove", function (event, d) {
+                if (!d.interactive) return;
+                moveTooltip(event);
+            })
+            .on("mouseleave", function (event, d) {
+                if (!d.interactive) return;
+                g.selectAll("text").style("opacity", 1);
+                d3.select(this).style("fill", d.text === "Natalia" ? "#007BA7" : "#000000");
+                tooltip.style.opacity = 0;
+            })
+            .on("click", (event, d) => {
+                if (!d.interactive) return;
+                const section = document.querySelector(d.section);
+                if (section) section.scrollIntoView({ behavior: 'smooth' });
+            });
+    }
+
+    function moveTooltip(e) {
+        let x = e.clientX + 16, y = e.clientY - 10;
+        if (x + 240 > window.innerWidth) x = e.clientX - 250;
+        tooltip.style.left = x + "px";
+        tooltip.style.top = y + "px";
+    }
+</script>
+
+
+<!-- <h3>Computer Science Student</h3><br>
+            <p>Computer Science student at UBC focused on data engineering and backend systems. Interested in building
+                reliable data pipelines and scalable applications that turn complex data into useful insights.</p>
+            <div class="hero-links">
+                <a href="#projects" class="btn btn-primary">View my work</a>
+                <a href="https://github.com/nb488" target="_blank" class="btn btn-outline">GitHub ↗</a>
+                <a href="https://linkedin.com/in/natblanco" target="_blank" class="btn btn-outline">LinkedIn ↗</a>
+            </div> -->
